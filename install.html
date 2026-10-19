@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>France Travail - Activer le copier-coller</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    max-width: 680px; margin: 0 auto; padding: 24px 16px; line-height: 1.5;
+  }
+  h1 { font-size: 1.4rem; }
+  .bm {
+    display: inline-block; margin: 14px 0; padding: 12px 20px;
+    background: #2563eb; color: #fff; text-decoration: none;
+    border-radius: 8px; font-weight: 600; cursor: grab;
+  }
+  .steps { background: rgba(127,127,127,.12); padding: 12px 16px; border-radius: 8px; }
+  code { background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 28px; font-size: .85rem; opacity: .7; }
+</style>
+</head>
+<body>
+
+<h1>Activer le copier-coller sur France Travail</h1>
+<p>Réactive le copier-coller sur les champs qui le bloquent (handler onpaste), notamment la page de changement de mot de passe. Blocage absurde à l'ère des gestionnaires de mots de passe autogénérés.</p>
+
+<p><strong>Installation (glisser-déposer) :</strong></p>
+<a class="bm" id="bm" href="#">📋 Activer copier-coller</a>
+
+<div class="steps">
+  <p><strong>Comment installer le bouton ci-dessus :</strong></p>
+  <ol>
+    <li>Affiche ta barre de favoris dans Chrome : <code>Ctrl + Maj + B</code>.</li>
+    <li><strong>Glisse</strong> le bouton bleu vers ta barre de favoris, puis relâche.</li>
+    <li>Va sur la page France Travail où le collage est bloqué.</li>
+    <li>Clique sur le favori. Une popup te demande le <code>name</code> du champ (clic droit sur le champ → Inspecter → attribut <code>name="..."</code>).</li>
+  </ol>
+  <p>Le glisser-déposer est la seule méthode fiable : Chrome ne permet pas d'ajouter un bookmarklet en téléchargeant un fichier.</p>
+</div>
+
+<p style="margin-top:18px"><strong>Sinon, méthode console :</strong> ouvre la console (<code>F12</code>), colle le contenu de <code>france-travail-enable-copy-paste.js</code>, Entrée.</p>
+
+<!-- Code du bookmarklet, brut. Le href draggable est généré au chargement pour gérer accents et emoji. -->
+<textarea id="src" hidden>(function(){const elementName=prompt("Entrez le 'name' de l'input ou textarea :");if(elementName){const elements=document.getElementsByName(elementName);if(elements.length>0){const element=elements[0];if(element.tagName==='INPUT'||element.tagName==='TEXTAREA'){element.style.webkitUserSelect='text';element.style.userSelect='text';const allowEvent=(e)=>{e.stopImmediatePropagation();return true;};element.addEventListener('copy',allowEvent,true);element.addEventListener('paste',allowEvent,true);element.addEventListener('cut',allowEvent,true);element.addEventListener('selectstart',allowEvent,true);element.addEventListener('contextmenu',allowEvent,true);['oncopy','onpaste','oncut','onselectstart','oncontextmenu'].forEach(attr=>{if(element.hasAttribute(attr)){element.removeAttribute(attr);}});console.log('\u2705 Copier-coller active !');}else{console.error('\u274C Ni INPUT ni TEXTAREA');}}else{console.error('\u274C Aucun element avec ce name');}}})();</textarea>
+
+<script>
+  const code = document.getElementById('src').value;
+  document.getElementById('bm').href = 'javascript:' + encodeURIComponent(code);
+</script>
+
+<footer>Licence MIT. Fonctionne sur la page courante uniquement, à relancer après rechargement.</footer>
+</body>
+</html>
