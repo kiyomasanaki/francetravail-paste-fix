@@ -18,6 +18,7 @@
   }
   .steps { background: rgba(127,127,127,.12); padding: 12px 16px; border-radius: 8px; }
   code { background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 4px; }
+  .err { color: #dc2626; font-weight: 600; }
   footer { margin-top: 28px; font-size: .85rem; opacity: .7; }
 </style>
 </head>
@@ -32,22 +33,27 @@
 <div class="steps">
   <p><strong>Comment installer le bouton ci-dessus :</strong></p>
   <ol>
-    <li>Affiche ta barre de favoris dans Chrome : <code>Ctrl + Maj + B</code>.</li>
+    <li>Affiche ta barre de favoris : <code>Ctrl + Maj + B</code> (Chrome, Edge, Firefox), <code>Cmd + Maj + B</code> sur Mac.</li>
     <li><strong>Glisse</strong> le bouton bleu vers ta barre de favoris, puis relâche.</li>
     <li>Va sur la page France Travail où le collage est bloqué.</li>
-    <li>Clique sur le favori. Une popup te demande le <code>name</code> du champ (clic droit sur le champ → Inspecter → attribut <code>name="..."</code>).</li>
+    <li>Clique sur le favori. Un message vert confirme l'activation : tu peux coller dans tous les champs de la page.</li>
   </ol>
   <p>Le glisser-déposer est la seule méthode fiable : Chrome ne permet pas d'ajouter un bookmarklet en téléchargeant un fichier.</p>
 </div>
 
-<p style="margin-top:18px"><strong>Sinon, méthode console :</strong> ouvre la console (<code>F12</code>), colle le contenu de <code>france-travail-enable-copy-paste.js</code>, Entrée.</p>
+<p style="margin-top:18px"><strong>Sinon, méthode console :</strong> ouvre la console (<code>F12</code>), colle le contenu de <a href="france-travail-enable-copy-paste.js"><code>france-travail-enable-copy-paste.js</code></a>, Entrée. Chrome refuse le premier collage dans la console : tape d'abord <code>allow pasting</code> puis Entrée.</p>
 
-<!-- Code du bookmarklet, brut. Le href draggable est généré au chargement pour gérer accents et emoji. -->
-<textarea id="src" hidden>(function(){const elementName=prompt("Entrez le 'name' de l'input ou textarea :");if(elementName){const elements=document.getElementsByName(elementName);if(elements.length>0){const element=elements[0];if(element.tagName==='INPUT'||element.tagName==='TEXTAREA'){element.style.webkitUserSelect='text';element.style.userSelect='text';const allowEvent=(e)=>{e.stopImmediatePropagation();return true;};element.addEventListener('copy',allowEvent,true);element.addEventListener('paste',allowEvent,true);element.addEventListener('cut',allowEvent,true);element.addEventListener('selectstart',allowEvent,true);element.addEventListener('contextmenu',allowEvent,true);['oncopy','onpaste','oncut','onselectstart','oncontextmenu'].forEach(attr=>{if(element.hasAttribute(attr)){element.removeAttribute(attr);}});console.log('\u2705 Copier-coller active !');}else{console.error('\u274C Ni INPUT ni TEXTAREA');}}else{console.error('\u274C Aucun element avec ce name');}}})();</textarea>
+<p id="err" class="err" hidden>Le bouton n'a pas pu être préparé : cette page doit être ouverte depuis GitHub Pages (ou un serveur local), pas en double-cliquant sur le fichier.</p>
 
+<!-- Le bookmarklet est construit à partir du script source : une seule version du code à maintenir. -->
 <script>
-  const code = document.getElementById('src').value;
-  document.getElementById('bm').href = 'javascript:' + encodeURIComponent(code);
+  fetch('france-travail-enable-copy-paste.js')
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then((code) => { document.getElementById('bm').href = 'javascript:' + encodeURIComponent(code); })
+    .catch(() => {
+      document.getElementById('bm').removeAttribute('href');
+      document.getElementById('err').hidden = false;
+    });
 </script>
 
 <footer>Licence MIT. Fonctionne sur la page courante uniquement, à relancer après rechargement.</footer>

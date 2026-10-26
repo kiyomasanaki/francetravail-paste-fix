@@ -4,13 +4,15 @@ Réactive le copier-coller sur les champs qui le bloquent (handler onpaste), not
 
 Optimisé pour `https://candidat.francetravail.fr/compte/parametres/modificationmotdepasse`, mais le code fonctionne sur n'importe quel site qui bloque le collage.
 
+Agit sur **toute la page d'un coup** : plus besoin de chercher le `name` du champ, le mot de passe et sa confirmation sont débloqués en une fois.
+
 ## Deux façons de l'utiliser
 
 ### 1. Bookmarklet (un clic, recommandé)
 
-Ouvre **`install.html`** dans Chrome, puis glisse le bouton bleu vers ta barre de favoris (`Ctrl + Maj + B` pour l'afficher). Ensuite, sur la page bloquée, clique sur le favori.
+Ouvre la **[page d'installation](https://kiyomasanaki.github.io/francetravail-paste-fix/install.html)**, puis glisse le bouton bleu vers ta barre de favoris (`Ctrl + Maj + B` pour l'afficher, `Cmd + Maj + B` sur Mac). Ensuite, sur la page bloquée, clique sur le favori : un message vert confirme l'activation.
 
-Note : Chrome ne permet pas d'ajouter un bookmarklet en téléchargeant un fichier. Le glisser-déposer du lien est la seule méthode fiable.
+Fonctionne sous Chrome, Edge et Firefox. Le glisser-déposer du lien est la seule méthode fiable : Chrome ne permet pas d'ajouter un bookmarklet en téléchargeant un fichier.
 
 ### 2. Console
 
@@ -18,38 +20,28 @@ Note : Chrome ne permet pas d'ajouter un bookmarklet en téléchargeant un fichi
 
 ![Ouvrir la console DevTools](./images/01-ouvrir-console.png)
 
-**Étape 2 : coller le script.** Copie tout le contenu de `france-travail-enable-copy-paste.js`, colle dans la console, Entrée.
+**Étape 2 : coller le script.** Copie tout le contenu de [`france-travail-enable-copy-paste.js`](./france-travail-enable-copy-paste.js), colle dans la console, Entrée.
 
-![Code collé dans la console](./images/02-coller-script.png)
+> Chrome bloque le premier collage dans la console (protection anti-arnaque) : tape `allow pasting`, Entrée, puis colle à nouveau.
 
-**Étape 3 : entrer le `name` du champ.** Une popup le demande. Pour le trouver : clic droit sur le champ -> Inspecter -> cherche l'attribut `name="..."`.
+**Étape 3 : coller.** Un message vert s'affiche en haut de la page et dans la console. Tous les champs de la page acceptent maintenant le collage.
 
-![Inspecter l'élément pour trouver le name](./images/03-inspecter-1.png)
-![Inspecter l'élément pour trouver le name](./images/04-inspecter-2.png)
-![Popup demandant le name](./images/05-popup-name.png)
-
-**Étape 4 : vérifier.** Un message ✅ confirme l'activation dans la console, et le collage fonctionne.
-
-![Message de confirmation](./images/06-confirmation.png)
 ![On peut maintenant coller](./images/07-coller-ok.png)
-
-Recommence pour le champ suivant (ex. confirmation du mot de passe).
-
-![Champ suivant](./images/08-champ-suivant.png)
-![On peut maintenant coller](./images/09-coller-ok-2.png)
 
 ## Notes
 
-Le script agit sur la page courante uniquement. Relance-le après un rechargement de page. Certains sites peuvent avoir des protections supplémentaires.
+Le script agit sur la page courante uniquement (y compris ses iframes de même origine). Relance-le après un rechargement de page.
 
-Exemples de `name` courants : `email`, `password`, `username`, `confirm-password`.
+Il neutralise les blocages posés sur le champ, sur la page ou sur la fenêtre (`onpaste`, `addEventListener('paste', ...)`, `preventDefault()`), ainsi que ceux du copier, couper, de la sélection et du clic droit.
+
+Sous Firefox, une alternative permanente existe : dans `about:config`, passer `dom.event.clipboardevents.enabled` à `false` empêche tous les sites de bloquer le presse-papier (mais casse aussi les boutons « copier » de certains sites).
 
 ## Fichiers
 
 | Fichier | Rôle |
 | --- | --- |
-| `france-travail-enable-copy-paste.js` | Script source, lisible, pour la console |
-| `install.html` | Page d'installation du bookmarklet (glisser-déposer) |
+| `france-travail-enable-copy-paste.js` | Script source, utilisé pour la console et le bookmarklet |
+| `install.html` | Page d'installation du bookmarklet (glisser-déposer), construit à partir du script source |
 | `images/` | Captures d'écran du tutoriel |
 
 ## Licence

@@ -2,55 +2,58 @@
 // notamment la page de changement de mot de passe.
 // Blocage absurde à l'ère des gestionnaires de mots de passe autogénérés.
 //
+// Agit sur toute la page d'un coup : pas besoin de chercher le name du champ.
 // Usage console : F12 -> onglet Console -> coller tout ce fichier -> Entrée.
-// Une popup demande le "name" du champ (clic droit sur le champ -> Inspecter -> attribut name="...").
+// Ce fichier est aussi la source du bookmarklet (install.html le charge tel quel).
 //
 // Licence MIT.
 
-// Demander le name de l'élément
-const elementName = prompt("Entrez le 'name' de l'input ou textarea :");
-if (elementName) {
-  // Rechercher l'élément par son attribut name
-  const elements = document.getElementsByName(elementName);
+(() => {
+  const EVENTS = ['copy', 'cut', 'paste', 'selectstart', 'contextmenu'];
+  let frames = 0;
 
-  if (elements.length > 0) {
-    // Prendre le premier élément trouvé
-    const element = elements[0];
+  const unblock = (win) => {
+    // Déjà fait sur cette fenêtre (script relancé) : rien à refaire.
+    if (win.__ftPasteFix) return;
+    win.__ftPasteFix = true;
 
-    // Vérifier que c'est bien un input ou textarea
-    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-      // Permettre la sélection de texte
-      element.style.webkitUserSelect = 'text';
-      element.style.userSelect = 'text';
+    // Écouteur en phase capture sur window : il passe avant tous les blocages posés sur
+    // document, body ou le champ lui-même, et les empêche de s'exécuter.
+    const stop = (e) => e.stopImmediatePropagation();
+    EVENTS.forEach((type) => win.addEventListener(type, stop, true));
 
-      // Intercepter et autoriser les événements
-      const allowEvent = (e) => {
-        e.stopImmediatePropagation();
-        return true;
-      };
+    // Un blocage posé sur window avant nous passe quand même : on rend preventDefault
+    // inopérant sur les événements presse-papier pour qu'il ne puisse plus rien annuler.
+    win.ClipboardEvent.prototype.preventDefault = function () {};
+    frames++;
+  };
 
-      // Ajouter des listeners pour autoriser copier-coller
-      element.addEventListener('copy', allowEvent, true);
-      element.addEventListener('paste', allowEvent, true);
-      element.addEventListener('cut', allowEvent, true);
-      element.addEventListener('selectstart', allowEvent, true);
-      element.addEventListener('contextmenu', allowEvent, true);
-
-      // Supprimer les attributs inline
-      ['oncopy', 'onpaste', 'oncut', 'onselectstart', 'oncontextmenu'].forEach(attr => {
-        if (element.hasAttribute(attr)) {
-          element.removeAttribute(attr);
-        }
-      });
-
-      console.log(`✅ Copier-coller activé sur l'élément avec name="${elementName}" !`);
-      console.log(`Type: ${element.tagName}, ID: ${element.id || '(pas d\'id)'}`);
-    } else {
-      console.error(`❌ L'élément trouvé n'est ni un INPUT ni un TEXTAREA (c'est un ${element.tagName})`);
+  const walk = (win) => {
+    try {
+      unblock(win);
+    } catch (e) {
+      return; // iframe d'une autre origine : inaccessible
     }
-  } else {
-    console.error(`❌ Aucun élément trouvé avec name="${elementName}"`);
-  }
-} else {
-  console.log('❌ Opération annulée');
-}
+    for (let i = 0; i < win.frames.length; i++) walk(win.frames[i]);
+  };
+
+  walk(window);
+
+  const message = '✅ Copier-coller activé sur cette page. À relancer après un rechargement.';
+  console.log(message, frames > 1 ? `(${frames} cadres)` : '');
+
+  // Retour visible pour le bookmarklet, la console n'étant pas ouverte.
+  document.getElementById('ft-paste-fix-toast')?.remove();
+  const toast = document.createElement('div');
+  toast.id = 'ft-paste-fix-toast';
+  toast.textContent = message;
+  toast.setAttribute('role', 'status');
+  Object.assign(toast.style, {
+    position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)',
+    zIndex: '2147483647', padding: '10px 16px', borderRadius: '8px',
+    background: '#166534', color: '#fff', font: '600 14px system-ui, sans-serif',
+    boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+})();
